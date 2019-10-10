@@ -12,13 +12,13 @@ string CaeserDecrpt(string Key, string CinText)
 		char temp = (CinText[i] - CaesarShift);
 		if (temp < 'A')
 		{
-			temp = -('A' - temp) + 'A';
+			temp = (temp - 'A') + 'Z'+1;
 		}
-		CinText[i] = (CinText[i] - CaesarShift);
+		CinText[i] = temp;
 	}
 	for (int i = 0; i < CinText.length(); i++)
 	{
-		CinText[i] = toupper(CinText[i]);
+		CinText[i] = tolower(CinText[i]);
 	}
 	return CinText;
 }
@@ -151,7 +151,6 @@ string RowDecrpt(string Key, string CinText)
 	MatrixOfText = new char*[Key.length()];
 	int RowCount = 0;
 	keyrow = new int[Key.length()];
-
 	for (int i = 0; i < Key.length(); i++)
 	{
 		keyrow[(int)(Key[i] - '1')] = i;
@@ -159,12 +158,12 @@ string RowDecrpt(string Key, string CinText)
 	}
 	for (int j = 0; j < Key.length(); j++)
 	{
-		for (int i = 0; i < (CinText.length() / Key.length()); i++)
+		for (int i = 0; i < (CinText.length() / Key.length())+1; i++)
 		{
-			MatrixOfText[keyrow[j]][i] = CinText[j*(CinText.length() / Key.length()) + i];
+			MatrixOfText[keyrow[j]][i] = CinText[j*((CinText.length() / Key.length())+1) + i];
 		}
 	}
-	for (int i = 0; i < (CinText.length() / Key.length()); i++)
+	for (int i = 0; i < (CinText.length() / Key.length())+1; i++)
 	{
 		for (int j = 0; j < Key.length(); j++)
 		{
@@ -245,6 +244,10 @@ string Rail_fence(string Key, string CinText)
 }
 int main(int argc, char* argv[])
 {
+	if (argc < 4)
+	{
+		return 1;
+	}
 	string type(argv[1]);
 	string Key(argv[2]);
 	string CinText(argv[3]);
@@ -275,6 +278,5 @@ int main(int argc, char* argv[])
 		Ciphertext = Rail_fence(Key, CinText);
 	}
 	cout << Ciphertext;
-	system("PAUSE");
 	return 0;
 }

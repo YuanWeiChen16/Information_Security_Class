@@ -43,6 +43,7 @@ class AESCipher():
         self.SizeX=int(string.split()[0])
         self.SizeY=int(string.split()[1])
         self.data_bin=PPM_Text.read()
+
     #創建一個PPM檔的開頭
     def __bytes__(self):   
         NewPPM = bytes("P6\n","utf-8")+bytes(str(self.SizeX),'utf-8')+bytes(" ","utf-8")+bytes(str(self.SizeY),'utf-8')+bytes("\n","utf-8")+bytes(str(self.range),'utf-8')+bytes("\n","utf-8")+self.pixels_bin
@@ -51,81 +52,130 @@ class AESCipher():
     #用ECB加密
     def ECBEncrypt(self,key):
         self.data_bin = pad(self.data_bin)#不足時先補齊
-        to_return = self
-        datas_bin_origin = self.data_bin
-        to_return.data_bin=bytes()#創一個PPM檔
+        ECBEncrypt_return = self
+        origin = self.data_bin
+        ECBEncrypt_return.data_bin=bytes()#創一個PPM檔
         cipherblock =bytes()#密文
-        for i in range(int(len(datas_bin_origin)/16)) :
-            block = datas_bin_origin[16*i:16*i+16]#將每一個block的資料拿出來
+        for i in range(int(len(origin)/16)) :
+            block = origin[16*i:16*i+16]#將每一個block的資料拿出來
             cipherblock += AES_encrypt_block(block,key)#對每一個block加密
-        to_return.data_bin += cipherblock#將PPM檔開頭和密文和在一起
-        return to_return
+        ECBEncrypt_return.data_bin += cipherblock#將PPM檔開頭和密文和在一起
+        return ECBEncrypt_return
 
     #ECB解密
     def ECBDecrypt(self,key):
         self.data_bin = pad(self.data_bin)#不足時先補齊
-        to_return = self
-        datas_bin_origin = self.data_bin
-        to_return.data_bin=bytes()#創一個PPM檔
+        ECBDecrypt_return = self
+        origin = self.data_bin
+        ECBDecrypt_return.data_bin=bytes()#創一個PPM檔
         plainblock = bytes()#明文
-        for i in range(int(len(datas_bin_origin)/16)) :
-            block = datas_bin_origin[16*i:16*i+16]#將每一個block的資料拿出來
+        for i in range(int(len(origin)/16)) :
+            block = origin[16*i:16*i+16]#將每一個block的資料拿出來
             plainblock += AES_decrypt_block(block,key)#對每一個block解密
-        to_return.data_bin += plainblock#將PPM檔開頭和明文和在一起
-        return to_return
+        ECBDecrypt_return.data_bin += plainblock#將PPM檔開頭和明文和在一起
+        return ECBDecrypt_return
 
     #CBC加密
     def CBCEncrypt(self,key):
+        Ivector = key[0:16]#init vector
         self.data_bin = pad(self.data_bin))#不足時先補齊
-        to_return = copy.copy(self)
-        to_return.data_bin=bytes()#創一個PPM檔
-        processed_block=bytes()#密文
-        Initvector = key[0:16]#init vector??
+        CBCEncrypt_return = copy.copy(self)
+        CBCEncrypt_return.data_bin=bytes()#創一個PPM檔
+        tempblock=bytes()#密文
         for i in range(int(len(self.data_bin)/16)) :
-            block=self.data_bin[16*i:16*i+16]
-            block = bytes_xor(block,vector)#CBC先跟IV互斥或再運算
-            processed_block = AES_encrypt_block(block,key)#對每一個block加密
-            vector = processed_block#加密輸出當下一次的解密
-        to_return.data_bin+=processed_block
-        return to_return
+            block=self.data_bin[16*i:16*i+16]#選出要計算的block
+            block = bytes_xor(block,Ivector)#先跟IV互斥或再運算
+            tempblock = AES_encrypt_block(block,key)#對每一個block加密
+            Ivector = tempblock#加密輸出當下一次的解密
+        CBCEncrypt_return.data_bin+=tempblock
+        return CBCEncrypt_return
 
-
+    #CBC解密
     def CBCDecrypt(self,key):
-         self.data_bin = pad(self.data_bin)
-        to_return = copy.copy(self)
-        to_return.data_bin=bytes()
-        processed_block=bytes()
-        vector = key[0:16]
+        Ivector = key[0:16]#init vector
+        self.data_bin = pad(self.data_bin)#不足時先補齊
+        CBCDecrypt_return = copy.copy(self)
+        CBCDecrypt_return.data_bin=bytes()#創PPM檔
+        tempblock=bytes()#明文
         for i in range(int(len(self.data_bin)/16)) :
-            block=self.data_bin[16*i:16*i+16]
-            processed_block = AES_decrypt_block(block,key)
-            processed_block = bytes_xor(processed_block,vector)
-            vector = block
-           to_return.data_bin+=processed_block
-        return to_return
+            block=self.data_bin[16*i:16*i+16]#選出要計算的block
+            tempblock = AES_decrypt_block(block,key)#對每一個block解密
+            tempblock = bytes_xor(tempblock,Ivector)#跟IV互斥或
+            Ivector = block
+        CBCDecrypt_return.data_bin+=tempblock
+        return CBCDecrypt_return
+
+    #cool加密
+    def CoolEncrypt(self,key):
+        self.data_bin=pad(self.data_bin)
+        ECBEncrypt_return = self
+        origin = self.data_bin
+        ECBEncrypt_return.data_bin=bytes()#創一個PPM檔
+        cipherblock =bytes()#密文
+        for i in range(int(len(origin)/16)) :
+            block = origin[16*i:16*i+16]#將每一個block的資料拿出來
+            block = bytes_xor(block,key)#先跟key互斥或
+            block = AES_encrypt_block(block,key)#對每一個block加密
+            cipherblock+= bytes_xor(block,key)#後跟key互斥或
+        ECBEncrypt_return.data_bin += cipherblock#將PPM檔開頭和密文和在一起
+        return ECBEncrypt_return
+
+    #cool解密
+    def CoolDecrypt(self,key):
+        self.data_bin = pad(self.data_bin)#不足時先補齊
+        ECBDecrypt_return = self
+        origin = self.data_bin
+        ECBDecrypt_return.data_bin=bytes()#創一個PPM檔
+        plainblock = bytes()#明文
+        for i in range(int(len(origin)/16)) :
+            block = origin[16*i:16*i+16]#將每一個block的資料拿出來
+            block = bytes_xor(block,key)#先跟key互斥或
+            block = AES_decrypt_block(block,key)#對每一個block解密
+            plainblock+= bytes_xor(block,key)#後跟key互斥或
+        ECBDecrypt_return.data_bin += plainblock#將PPM檔開頭和明文和在一起
+        return ECBDecrypt_return
+
 
 if __name__ == "__main__":
-    # argv=[hw3.py, filepath, encrypt/decrypt, mode, key]
-    if(len(argv)!=6):
-        print("Arguments error")
+    #輸入錯誤
+    if(len(argv)!=5):
+        print("Error")
         exit()
-    Inimg = Image.open(argv[1])
-    PPMimg=Inimg[:-4]+".ppm"
-    Inimg.save(PPMimg)
+    #開png圖片檔
+    InputName=argv[1]
+    Inimg = Image.open(InputName)
+    PPMimg = InputName[:-4]+".ppm"
+    Inimg.save(PPMimg)#存成PPM檔
     Inimg.close()
-    PPM=open(PPMimg, 'rb')
-
-    with Image.open(input_png_path) as input_png_file :
-        input_ppm_path = input_png_path[:-4]+".ppm"
-        input_png_file.save(input_ppm_path)
-    
-    key=0
+    PPM=open(PPMimg, 'rb')#開起PPM檔
+    EN_DE=argv[2]
+    Mode = argv[3]
+    KEY=bytes.fromhex(argv[4])
     NPPM=AESCipher(PPM)
-
-    
-
-
-    im=Image.open("./asda.ppm")
-    im.save("./Output.png")
+    #模式判斷
+    if(Mode=="ECB")
+        if(EN_DE=="encrypt")
+            NPPM=NPPM.ECBEncrypt(KEY)
+        if(EN_DE=="decrypt")
+            NPPM=NPPM.ECBDecrypt(KEY)
+    if(Mode=="CBC")
+        if(EN_DE=="encrypt")
+            NPPM=NPPM.CBCEncrypt(KEY)
+        if(EN_DE=="decrypt")
+            NPPM=NPPM.CBCDecrypt(KEY)
+    if(Mode=="Cool")
+        if(EN_DE=="encrypt")
+            NPPM=NPPM.CoolEncrypt(KEY)
+        if(EN_DE=="decrypt")
+            NPPM=NPPM.CoolDecrypt(KEY)
+    #寫回圖片檔
     PPM.close()
-main()
+    OUTPPM=open(PPMimg, 'Wb')#開起PPM檔
+    OUTPPM.write(bytes(NPPM))   #寫入新資料
+    OUTPPM.close()
+
+    OUTPng=Image.open(PPMimg)   #用Image開檔(存成png)
+    Pngimg=PPMimg[:-4]+"_output.png"#png路徑
+    OUTPng.save(Pngimg) #存成png
+    OUTPng.close()
+  

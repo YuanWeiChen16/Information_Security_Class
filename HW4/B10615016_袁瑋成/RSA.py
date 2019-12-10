@@ -124,17 +124,21 @@ def RSAInit(Rsa_Size):
 
 
 
-    
+
+
+
     return -1
 
 def RSA_E(PlainText,E,N):
-    
-    return pow(PlainText,E,N)
+    PlainBin = bin(PlainText)
+    PlainNumber=int(PlainBin,2)
+    return pow(Plainnumber,E,N)
 
 
 def RSA_D(CipherText,D,N):
-
-    return pow(CipherText,D,N)
+    CipherBin=bin(CipherText)
+    CipherNumber=int(CipherBin,2)
+    return pow(CipherNumber,D,N)
 
 
 
@@ -145,17 +149,19 @@ if __name__ == "__main__":
         exit()
     Mode=argv[1]
     Rsa_Size=int 0
-    PlainText
-    CipherText
+    TextInPut=argv[2]
     
     if(Mode=="init")
-        Rsa_Size=argv[2]
-        
+        Rsa_Size=int(argv[2])
+        RSAInit(Rsa_Size)
         print()
     if(Mode=="e")
-       
-
+        RSA_E_E = argv[3]
+        RSA_E_N = argv[4]
+        RSA_E(TextInPut,RSA_E_E,RSA_E_N)
         print()
     if(Mode=="d")
-
+        RSA_D_D = argv[3]
+        RSA_D_N = argv[4]
+        RSA_D(TextInPut,RSA_D_D,RSA_D_N)
         print()

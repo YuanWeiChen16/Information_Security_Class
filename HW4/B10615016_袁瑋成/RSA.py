@@ -23,30 +23,15 @@ def ext_gcd(a, b):
         x = y1
         y = x1 - a // b * y1
         return r, x, y
-
-# 生成公鑰私鑰，p、q為兩個超大質數
-def gen_key(p, q):
-    n = p * q
-    fy = (p - 1) * (q - 1)      # 計算與n互質的整數個數 尤拉函式
-    e = 3889                    # 選取e   一般選取65537
-    # e=3
-    # generate d
-    a = e
-    b = fy
-    r, x, y = ext_gcd(a, b)
-    print(x)   # 計算出的x不能是負數，如果是負數，說明p、q、e選取失敗，一般情況下e選取65537
-    d = x
-    # 返回：   公鑰     私鑰
-    return    (n, e), (n, d)
     
 def power(x, y, p): #(x^y)%p 
     res = 1;        #Square-and-Multiply
     x = x % p       
     while (y > 0): 
         if (y & 1): 
-            res = (res * x) % p
+            res = (res * x) % p     #Multiply
         y = y>>1
-        x = (x * x) % p 
+        x = (x * x) % p     #Square
     return res; 
 
 def miillerTest(d, n): 
@@ -109,14 +94,16 @@ def RSAInit(Rsa_Size):
 
     while True:
         random.seed(time.time())
+
         bin_Init_P = 1
         Si = Rsa_Size-2
+        
         for i in range(Si):
-            bin_Init_P = bin_Init_P * 2 + int(random.randint(0,1))
-        bin_Init_P = bin_Init_P*2 + 1
+            bin_Init_P = bin_Init_P * 2 + int(random.randint(0,1))  #亂數二進制數字
+        bin_Init_P = bin_Init_P*2 + 1   #在二進制最前和最後加一位1 確保有到達指定位數的加密長度 和確定是奇數(偶數不會是質數)
 
-        while (isPrime(bin_Init_P, 5) != True):
-            bin_Init_P = 1
+        while (isPrime(bin_Init_P, 5) != True): #確定是奇數
+            bin_Init_P = 1                      #不是的話繼續亂數重找
             for i in range(Si):
                 bin_Init_P = bin_Init_P*2 + random.randint(0,1)
             bin_Init_P = bin_Init_P*2 + 1
@@ -124,49 +111,43 @@ def RSAInit(Rsa_Size):
         random.seed(time.time())
         bin_Init_Q = 1
         for i in range(Si):
-            bin_Init_Q = bin_Init_Q * 2 + int(random.randint(0,1))
-        bin_Init_Q = bin_Init_Q * 2 + 1
-        while ((isPrime(bin_Init_Q, 5) != True )|(bin_Init_Q==bin_Init_P)):
-            bin_Init_Q = 1
+            bin_Init_Q = bin_Init_Q * 2 + int(random.randint(0,1))       #亂數二進制數字
+        bin_Init_Q = bin_Init_Q * 2 + 1               #在二進制最前和最後加一位1 確保有到達指定位數的加密長度 和確定是奇數(偶數不會是質數)
+        while ((isPrime(bin_Init_Q, 5) != True )|(bin_Init_Q==bin_Init_P)):      #確定是奇數並且跟上一個找到的不一樣
+            bin_Init_Q = 1                                                       #不是的話繼續亂數重找
             for i in range(Si):
                 bin_Init_Q = bin_Init_Q*2 + random.randint(0,1)
             bin_Init_Q = bin_Init_Q*2 + 1
 
-        n = bin_Init_P * bin_Init_Q
-        fy = (bin_Init_P - 1) * (bin_Init_Q - 1)      # 計算與n互質的整數個數 尤拉函式
-        e = 3
-        if fy > 3889:
-            e = 3889                    # 選取e   一般選取65537
-        # e=3
-        # generate d
-        a = e
-        b = fy
-        r, x, y = ext_gcd(a, b)
+        n = bin_Init_P * bin_Init_Q                 #計算n
+        fy = (bin_Init_P - 1) * (bin_Init_Q - 1)        #計算與n互質的整數個數
 
-        if x > 0:
+        e = 3            #選e 夠大的話選3889
+        if fy > 3889:               
+            e = 3889                    
+
+        a = e           
+        b = fy
+        r, x, y = ext_gcd(a, b)     # 產生d
+
+        if x > 0:               # 計算出的x不能是負數，如果是負數，說明p或q選取失敗，不是質數，要重選
             print("P : ")
             print(bin_Init_P)
             print("Q : ")
             print(bin_Init_Q)
             break
 
-    #print(x)   # 計算出的x不能是負數，如果是負數，說明p、q、e選取失敗，一般情況下e選取65537
     d = x
     # 返回：   公鑰     私鑰
     return    (n, e), (n, d)
-    #return bin_Init_P , bin_Init_Q
   
 # 加密 m是被加密的資訊 加密成為c
-def encrypt(m, pubkey):
-    n = pubkey[0]
-    e = pubkey[1]
+def encrypt(m, n, e):
     c = power(m, e, n)
     return c
 
 # 解密 c是密文，解密為明文m
-def decrypt(c, selfkey):
-    n = selfkey[0]
-    d = selfkey[1]
+def decrypt(c, n, d):
     m = power(c, d, n)
     return m
     
@@ -179,22 +160,21 @@ if __name__ == "__main__":
     
     '''需要被加密的資訊轉化成數字，長度小於祕鑰n的長度，如果資訊長度大於n的長度，那麼分段進行加密，分段解密即可。'''
     #m = "abc123"
-    print("N : ")
+    print("Public Key : ")
     print(pubkey[0])
-    print("E : ")
     print(pubkey[1])
-    print("D : ")
+    print("Private Key : ")
+    print(selfkey[0])
     print(selfkey[1])
 
-    #m=int(bin(m)[2:])
     m=int(sys.argv[2])
     '''資訊加密'''
     
-    c = encrypt(m, pubkey)
+    c = encrypt(m, pubkey[0], pubkey[1])
     print("CipherText : ")
     print(c)
 
     '''資訊解密'''
-    d = decrypt(c, selfkey)
+    d = decrypt(c, selfkey[0], selfkey[1])
     print("PlainText : ")
     print(d)

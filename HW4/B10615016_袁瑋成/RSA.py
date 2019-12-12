@@ -1,48 +1,54 @@
-#coding=utf-8 
 import sys
 import base64
 import copy
 import random
+import time
 
-def SandM(X,H,N):
-    bin_H=bin(H)
-    Y=0
-    for i in range(len(bin_H))
-        Y=POW(Y,2,N)
-        if(bin_H[i]==1)
-            Y=(Y*X)%N
-    return Y
-# Utility function to do 
-# modular exponentiation. 
-# It returns (x^y) % p 
-def power(x, y, p): 
-      
-    # Initialize result 
-    res = 1;  
-      
-    # Update x if it is more than or 
-    # equal to p 
-    x = x % p;  
+def gcd(a, b):
+    if b == 0:
+        return a
+    else:
+        return gcd(b, a % b)
+
+def ext_gcd(a, b):
+    if b == 0:
+        x1 = 1
+        y1 = 0
+        x = x1
+        y = y1
+        r = a
+        return r, x, y
+    else:
+        r, x1, y1 = ext_gcd(b, a % b)
+        x = y1
+        y = x1 - a // b * y1
+        return r, x, y
+
+# 生成公鑰私鑰，p、q為兩個超大質數
+def gen_key(p, q):
+    n = p * q
+    fy = (p - 1) * (q - 1)      # 計算與n互質的整數個數 尤拉函式
+    e = 3889                    # 選取e   一般選取65537
+    # e=3
+    # generate d
+    a = e
+    b = fy
+    r, x, y = ext_gcd(a, b)
+    print(x)   # 計算出的x不能是負數，如果是負數，說明p、q、e選取失敗，一般情況下e選取65537
+    d = x
+    # 返回：   公鑰     私鑰
+    return    (n, e), (n, d)
+    
+def power(x, y, p): #(x^y)%p 
+    res = 1;        #Square-and-Multiply
+    x = x % p       
     while (y > 0): 
-          
-        # If y is odd, multiply 
-        # x with result 
         if (y & 1): 
-            res = (res * x) % p; 
-  
-        # y must be even now 
-        y = y>>1; # y = y/2 
-        x = (x * x) % p; 
-      
+            res = (res * x) % p
+        y = y>>1
+        x = (x * x) % p 
     return res; 
-  
-# This function is called 
-# for all k trials. It returns 
-# false if n is composite and  
-# returns false if n is 
-# probably prime. d is an odd  
-# number such that d*2<sup>r</sup> = n-1 
-# for some r >= 1 
+
 def miillerTest(d, n): 
       
     # Pick a random number in [2..n-2] 
@@ -100,68 +106,90 @@ def isPrime(n, k):
     return True; 
   
 def RSAInit(Rsa_Size):
-    bin_Init_P = 1
-    for i in range (Rsa_Size-2)
-        bin_Init_P*2 + random.randint(0,1))
-    bin_Init_P = bin_Init_P*2 + 1
-    while(isPrime(bin_Init_P, 4)!=true)
+
+    while True:
+        random.seed(time.time())
         bin_Init_P = 1
-        for i in range (Rsa_Size-2)
-            bin_Init_P*2 + random.randint(0,1))
+        Si = Rsa_Size-2
+        for i in range(Si):
+            bin_Init_P = bin_Init_P * 2 + int(random.randint(0,1))
         bin_Init_P = bin_Init_P*2 + 1
-    
-    bin_Init_Q = 1
-    for i in range (Rsa_Size-2)
-        bin_Init_Q*2 + random.randint(0,1))
-    bin_Init_Q = bin_Init_Q*2 + 1
-    while(isPrime(bin_Init_Q, 4)!=true)
+
+        while (isPrime(bin_Init_P, 5) != True):
+            bin_Init_P = 1
+            for i in range(Si):
+                bin_Init_P = bin_Init_P*2 + random.randint(0,1)
+            bin_Init_P = bin_Init_P*2 + 1
+
+        random.seed(time.time())
         bin_Init_Q = 1
-        for i in range (Rsa_Size-2)
-            bin_Init_Q*2 + random.randint(0,1))
-        bin_Init_Q = bin_Init_Q*2 + 1
-    if(bin_Init_P!=bin_Init_Q)
-        
+        for i in range(Si):
+            bin_Init_Q = bin_Init_Q * 2 + int(random.randint(0,1))
+        bin_Init_Q = bin_Init_Q * 2 + 1
+        while ((isPrime(bin_Init_Q, 5) != True )|(bin_Init_Q==bin_Init_P)):
+            bin_Init_Q = 1
+            for i in range(Si):
+                bin_Init_Q = bin_Init_Q*2 + random.randint(0,1)
+            bin_Init_Q = bin_Init_Q*2 + 1
 
-
-
-
-
-
-    return -1
-
-def RSA_E(PlainText,E,N):
-    PlainBin = bin(PlainText)
-    PlainNumber=int(PlainBin,2)
-    return pow(Plainnumber,E,N)
-
-
-def RSA_D(CipherText,D,N):
-    CipherBin=bin(CipherText)
-    CipherNumber=int(CipherBin,2)
-    return pow(CipherNumber,D,N)
-
-
-
-if __name__ == "__main__":
-    #輸入錯誤
-    if(len(argv)!=5):
-        print("Error")
-        exit()
-    Mode=argv[1]
-    Rsa_Size=int 0
-    TextInPut=argv[2]
+        print(bin_Init_P)
+        print(bin_Init_Q)
     
-    if(Mode=="init")
-        Rsa_Size=int(argv[2])
-        RSAInit(Rsa_Size)
-        print()
-    if(Mode=="e")
-        RSA_E_E = argv[3]
-        RSA_E_N = argv[4]
-        RSA_E(TextInPut,RSA_E_E,RSA_E_N)
-        print()
-    if(Mode=="d")
-        RSA_D_D = argv[3]
-        RSA_D_N = argv[4]
-        RSA_D(TextInPut,RSA_D_D,RSA_D_N)
-        print()
+        n = bin_Init_P * bin_Init_Q
+        fy = (bin_Init_P - 1) * (bin_Init_Q - 1)      # 計算與n互質的整數個數 尤拉函式
+        e = 3889                    # 選取e   一般選取65537
+        # e=3
+        # generate d
+        a = e
+        b = fy
+        r, x, y = ext_gcd(a, b)
+        if x > 0:
+            break
+
+    print(x)   # 計算出的x不能是負數，如果是負數，說明p、q、e選取失敗，一般情況下e選取65537
+    d = x
+    # 返回：   公鑰     私鑰
+    return    (n, e), (n, d)
+    #return bin_Init_P , bin_Init_Q
+  
+# 加密 m是被加密的資訊 加密成為c
+def encrypt(m, pubkey):
+    n = pubkey[0]
+    e = pubkey[1]
+    c = power(m, e, n)
+    return c
+
+# 解密 c是密文，解密為明文m
+def decrypt(c, selfkey):
+    n = selfkey[0]
+    d = selfkey[1]
+    m = power(c, d, n)
+    return m
+    
+    
+if __name__ == "__main__":
+    
+    
+    '''生成公鑰私鑰'''
+    #pubkey, selfkey = gen_key(p, q)
+    pubkey, selfkey = RSAInit(700)
+    '''需要被加密的資訊轉化成數字，長度小於祕鑰n的長度，如果資訊長度大於n的長度，那麼分段進行加密，分段解密即可。'''
+    ##m = 1356205320457610288745198967657644166379972189839804389074591563666634066646564410685955217825048626066190866536592405966964024022236587593447122392540038493893121248948780525117822889230574978651418075403357439692743398250207060920929117606033490559159560987768768324823011579283223392964454439904542675637683985296529882973798752471233683249209762843835985174607047556306705224118165162905676610067022517682197138138621344578050034245933990790845007906416093198845798901781830868021761765904777531676765131379495584915533823288125255520904108500256867069512326595285549579378834222350197662163243932424184772115345
+    #m = "abc123"
+
+    #m=int(bin(m)[2:])
+    m=123456798
+    
+    
+    
+    '''資訊加密'''
+    c = encrypt(m, pubkey)
+    print("CipherText")
+    print(c)
+
+
+
+    '''資訊解密'''
+    d = decrypt(c, selfkey)
+    print("PlainText")
+    print(d)

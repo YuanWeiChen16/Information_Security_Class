@@ -132,21 +132,25 @@ def RSAInit(Rsa_Size):
                 bin_Init_Q = bin_Init_Q*2 + random.randint(0,1)
             bin_Init_Q = bin_Init_Q*2 + 1
 
-        print(bin_Init_P)
-        print(bin_Init_Q)
-    
         n = bin_Init_P * bin_Init_Q
         fy = (bin_Init_P - 1) * (bin_Init_Q - 1)      # 計算與n互質的整數個數 尤拉函式
-        e = 3889                    # 選取e   一般選取65537
+        e = 3
+        if fy > 3889:
+            e = 3889                    # 選取e   一般選取65537
         # e=3
         # generate d
         a = e
         b = fy
         r, x, y = ext_gcd(a, b)
+
         if x > 0:
+            print("P : ")
+            print(bin_Init_P)
+            print("Q : ")
+            print(bin_Init_Q)
             break
 
-    print(x)   # 計算出的x不能是負數，如果是負數，說明p、q、e選取失敗，一般情況下e選取65537
+    #print(x)   # 計算出的x不能是負數，如果是負數，說明p、q、e選取失敗，一般情況下e選取65537
     d = x
     # 返回：   公鑰     私鑰
     return    (n, e), (n, d)
@@ -169,27 +173,28 @@ def decrypt(c, selfkey):
     
 if __name__ == "__main__":
     
-    
     '''生成公鑰私鑰'''
     #pubkey, selfkey = gen_key(p, q)
-    pubkey, selfkey = RSAInit(700)
+    pubkey, selfkey = RSAInit(int(sys.argv[1]))
+    
     '''需要被加密的資訊轉化成數字，長度小於祕鑰n的長度，如果資訊長度大於n的長度，那麼分段進行加密，分段解密即可。'''
-    ##m = 1356205320457610288745198967657644166379972189839804389074591563666634066646564410685955217825048626066190866536592405966964024022236587593447122392540038493893121248948780525117822889230574978651418075403357439692743398250207060920929117606033490559159560987768768324823011579283223392964454439904542675637683985296529882973798752471233683249209762843835985174607047556306705224118165162905676610067022517682197138138621344578050034245933990790845007906416093198845798901781830868021761765904777531676765131379495584915533823288125255520904108500256867069512326595285549579378834222350197662163243932424184772115345
     #m = "abc123"
+    print("N : ")
+    print(pubkey[0])
+    print("E : ")
+    print(pubkey[1])
+    print("D : ")
+    print(selfkey[1])
 
     #m=int(bin(m)[2:])
-    m=123456798
-    
-    
-    
+    m=int(sys.argv[2])
     '''資訊加密'''
+    
     c = encrypt(m, pubkey)
-    print("CipherText")
+    print("CipherText : ")
     print(c)
-
-
 
     '''資訊解密'''
     d = decrypt(c, selfkey)
-    print("PlainText")
+    print("PlainText : ")
     print(d)

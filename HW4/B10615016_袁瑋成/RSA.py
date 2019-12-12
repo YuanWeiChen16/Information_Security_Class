@@ -4,6 +4,11 @@ import copy
 import random
 import time
 
+
+def encode(s):      #字串轉數字
+    return ''.join([bin(ord(c)).replace('0b','')for c in s])
+
+
 def gcd(a, b):
     if b == 0:
         return a
@@ -35,23 +40,13 @@ def power(x, y, p): #(x^y)%p
     return res; 
 
 def miillerTest(d, n): 
-      
-    # Pick a random number in [2..n-2] 
-    # Corner cases make sure that n > 4 
-    a = 2 + random.randint(1, n - 4); 
-  
-    # Compute a^d % n 
+
+    a = 2 + random.randint(1, n - 4);  
     x = power(a, d, n); 
   
     if (x == 1 or x == n - 1): 
         return True; 
   
-    # Keep squaring x while one  
-    # of the following doesn't  
-    # happen 
-    # (i) d does not reach n-1 
-    # (ii) (x^2) % n is not 1 
-    # (iii) (x^2) % n is not n-1 
     while (d != n - 1): 
         x = (x * x) % n; 
         d *= 2; 
@@ -61,30 +56,18 @@ def miillerTest(d, n):
         if (x == n - 1): 
             return True; 
   
-    # Return composite 
     return False; 
-  
-# It returns false if n is  
-# composite and returns true if n 
-# is probably prime. k is an  
-# input parameter that determines 
-# accuracy level. Higher value of  
-# k indicates more accuracy. 
 def isPrime(n, k): 
-      
-    # Corner cases 
+    
     if (n <= 1 or n == 4): 
         return False; 
     if (n <= 3): 
         return True; 
-  
-    # Find r such that n =  
-    # 2^d * r + 1 for some r >= 1 
+ 
     d = n - 1; 
     while (d % 2 == 0): 
         d //= 2; 
   
-    # Iterate given nber of 'k' times 
     for i in range(k): 
         if (miillerTest(d, n) == False): 
             return False; 
@@ -154,27 +137,26 @@ def decrypt(c, n, d):
     
 if __name__ == "__main__":
     
-    '''生成公鑰私鑰'''
-    #pubkey, selfkey = gen_key(p, q)
-    pubkey, selfkey = RSAInit(int(sys.argv[1]))
-    
-    '''需要被加密的資訊轉化成數字，長度小於祕鑰n的長度，如果資訊長度大於n的長度，那麼分段進行加密，分段解密即可。'''
-    #m = "abc123"
-    print("Public Key : ")
-    print(pubkey[0])
-    print(pubkey[1])
-    print("Private Key : ")
-    print(selfkey[0])
-    print(selfkey[1])
+    if sys.argv[1] == "init" :
+        pubkey, selfkey = RSAInit(int(sys.argv[2]))
+        print("Public Key : ")
+        print(pubkey[0])
+        print(pubkey[1])
+        print("Private Key : ")
+        print(selfkey[0])
+        print(selfkey[1])
 
-    m=int(sys.argv[2])
-    '''資訊加密'''
-    
-    c = encrypt(m, pubkey[0], pubkey[1])
-    print("CipherText : ")
-    print(c)
+    if sys.argv[1] == "E" :
+        m = int(encode(sys.argv[2]),2)  #字串轉換
 
-    '''資訊解密'''
-    d = decrypt(c, selfkey[0], selfkey[1])
-    print("PlainText : ")
-    print(d)
+        print("Text Encode To : ")     #轉換結果
+        print(m)
+        c = encrypt(m, int(sys.argv[3]), int(sys.argv[4]))    #加密
+        print("CipherText : ")              #輸出密文
+        print(c)
+
+    if sys.argv[1] == "D":
+        c = int(sys.argv[2])
+        d = decrypt(c,int(sys.argv[3]), int(sys.argv[4])) #解密
+        print("PlainText : ")       #輸出明文
+        print(d)

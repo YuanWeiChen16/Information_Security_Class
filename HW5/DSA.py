@@ -167,6 +167,3 @@ if __name__ == "__main__":
                 print("DSA Verify invalid")
         if(not NOTYOU):
             print("DSA Verify valid")
-           
-        print("PlainText : ")       #輸出明文
-        print(d)
